@@ -134,16 +134,16 @@ sprint:
 ; void sprintLF(String message)
 ; String printing with line feed function
 sprintLF:
-    call    sprint
- 
-    push    eax
-    mov     eax, 0AH
-    push    eax
-    mov     eax, esp
-    call    sprint
-    pop     eax
-    pop     eax
-    ret
+    call    sprint          ; Print the input string message
+
+    push    eax             ; Save the current value of EAX on the stack
+    mov     eax, 0AH        ; Load the ASCII code for line feed (LF) into EAX
+    push    eax             ; Put the LF onto the stack for the sprint function
+    mov     eax, esp        ; Move the stack pointer to EAX, now EAX points to the LF character on the stack
+    call    sprint          ; Print the line feed character
+    pop     eax             ; Clean up the stack, remove the LF character
+    pop     eax             ; Restore the original value of EAX
+    ret                     ; Return from the function
  
  
  
@@ -151,10 +151,10 @@ sprintLF:
 ; void exit()
 ; Exit program and restore resources
 quit:
-    mov     ebx, 0
-    mov     eax, 1
-    int     80h
-    ret
+    mov     ebx, 0          ; Set the exit status code to 0 (indicates successful completion)
+    mov     eax, 1          ; Load the exit system call number into EAX
+    int     80h             ; Make the system call to exit the program
+    ret                     ; Return from the function (although this will never be executed as the program will exit)
     
 
  
