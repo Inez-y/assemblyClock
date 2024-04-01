@@ -1,4 +1,49 @@
 ;------------------------------------------
+section .bss
+    count resb 1 ; Reserve a byte for the loop counter
+
+section .data
+    msg db 'The current time is: ', 0
+
+section .text
+global _start
+
+_start:
+    mov [count], 5 ; Set the loop to run 5 times
+
+loop_start:
+    ; Print the initial message
+    mov eax, msg
+    call sprint
+
+    ; Get the current time (number of seconds since the Unix epoch)
+    mov eax, 4 ; syscall number for sys_time
+    xor ebx, ebx ; ebx must be zeroed out for sys_time
+    int 0x80
+    ; eax now contains the current time
+
+    ; Print the current time
+    call iprintLF
+
+    ; Sleep for 2 seconds
+    mov eax, 2 ; Number of seconds to sleep
+    call sleep
+
+    ; Decrement our loop counter and check if it's zero
+    dec byte [count]
+    jz exit_loop
+
+    ; If not zero, jump back to the beginning of the loop
+    jmp loop_start
+
+exit_loop:
+    ; Exit the program
+    mov eax, 1 ; syscall number for sys_exit
+    xor ebx, ebx ; return code 0
+    int 0x80
+    
+<---update some stuff--->
+
 ; int slen(String message)
 ; String length calculation function
 slen:
