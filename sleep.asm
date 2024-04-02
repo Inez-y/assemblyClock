@@ -1,38 +1,7 @@
+; Combine the two assembly files
+
 ;------------------------------------------
-; int slen(String message)
-; String length calculation function
-slen:
-    push    ebx
-    mov     ebx, eax
- 
-nextchar:
-    cmp     byte [eax], 0
-    jz      finished
-    inc     eax
-    jmp     nextchar
- 
-finished:
-    sub     eax, ebx
-    pop     ebx
-    ret
- 
- 
-;------------------------------------------
-; void iprintLF(Integer number)
-; Integer printing function with linefeed (itoa)
-iprintLF:
-    call    iprint          ; call our integer printing function
- 
-    push    eax             ; push eax onto the stack to preserve it while we use the eax register in this function
-    mov     eax, 0Ah        ; move 0Ah into eax - 0Ah is the ascii character for a linefeed
-    push    eax             ; push the linefeed onto the stack so we can get the address
-    mov     eax, esp        ; move the address of the current stack pointer into eax for sprint
-    call    sprint          ; call our sprint function
-    pop     eax             ; remove our linefeed character from the stack
-    pop     eax             ; restore the original value of eax before our function was called
-    ret
- 
-; for calculator
+; atoi function
 atoi:
     push    ebx             ; preserve ebx on the stack to be restored after function runs
     push    ecx             ; preserve ecx on the stack to be restored after function runs
@@ -71,8 +40,7 @@ atoi:
     ret
 
 ;------------------------------------------
-; void iprint(Integer number)
-; Integer printing function (itoa)
+; iprint function
 iprint:
     push    eax             ; preserve eax on the stack to be restored after function runs
     push    ecx             ; preserve ecx on the stack to be restored after function runs
@@ -85,8 +53,8 @@ divideLoop:
     mov     edx, 0          ; empty edx
     mov     esi, 10         ; mov 10 into esi
     idiv    esi             ; divide eax by esi
-    add     edx, 48         ; convert edx to it's ascii representation - edx holds the remainder after a divide instruction
-    push    edx             ; push edx (string representation of an intger) onto the stack
+    add     edx, 48         ; convert edx to its ascii representation - edx holds the remainder after a divide instruction
+    push    edx             ; push edx (string representation of an integer) onto the stack
     cmp     eax, 0          ; can the integer be divided anymore?
     jnz     divideLoop      ; jump if not zero to the label divideLoop
  
@@ -103,9 +71,43 @@ printLoop:
     pop     ecx             ; restore ecx from the value we pushed onto the stack at the start
     pop     eax             ; restore eax from the value we pushed onto the stack at the start
     ret
- ;------------------------------------------
-; void sprint(String message)
-; String printing function
+ 
+ 
+;------------------------------------------
+; iprintLF function
+iprintLF:
+    call    iprint          ; call our integer printing function
+ 
+    push    eax             ; push eax onto the stack to preserve it while we use the eax register in this function
+    mov     eax, 0Ah        ; move 0Ah into eax - 0Ah is the ascii character for a linefeed
+    push    eax             ; push the linefeed onto the stack so we can get the address
+    mov     eax, esp        ; move the address of the current stack pointer into eax for sprint
+    call    sprint          ; call our sprint function
+    pop     eax             ; remove our linefeed character from the stack
+    pop     eax             ; restore the original value of eax before our function was called
+    ret
+ 
+ 
+;------------------------------------------
+; slen function
+slen:
+    push    ebx
+    mov     ebx, eax
+ 
+nextchar:
+    cmp     byte [eax], 0
+    jz      finished
+    inc     eax
+    jmp     nextchar
+ 
+finished:
+    sub     eax, ebx
+    pop     ebx
+    ret
+ 
+ 
+;------------------------------------------
+; sprint function
 sprint:
     push    edx
     push    ecx
@@ -128,72 +130,73 @@ sprint:
  
  
 ;------------------------------------------
-; void sprintLF(String message)
-; String printing with line feed function
-sprintLF:
-    call    sprint
+; _start function
+global  _start
  
-    push    eax
-    mov     eax, 0AH
-    push    eax
-    mov     eax, esp
-    call    sprint
-    pop     eax
-    pop     eax
-    ret
+_start:
  
+    mov     eax, msg        ; move our message string into eax for printing
+    call    sprint          ; call our string printing function
  
- 
-
-;------------------------------------------
-; void sleep(int seconds)
-; Sleep function to wait for a given number of seconds
-sleep:
-    mov     eax, 35         ; invoke SYS_SLEEP (kernel opcode 35)
+    mov     eax, 13         ; invoke SYS_TIME (kernel opcode 13)
     int     80h             ; call the kernel
-    ret
+ 
+    call    iprintLF        ; call our integer printing function with linefeed
 
-;------------------------------------------
-; void exit()
-; Exit program and restore resources
-quit:
-    mov     ebx, 0
-    mov     eax, 1
-    int     80h
-    ret
-    
-SECTION .data
+  ; print "Sleep"
+  mov eax, 4
+  mov ebx, 1
+  mov ecx, bmessage
+  mov edx, bmessagel
+  int 0x80
+
+  ; Sleep for 2 seconds and 0 nanoseconds
+  mov dword [tv_sec], 2
+  mov dword [tv_usec], 0
+  mov eax, 162
+  mov ebx, timeval
+  mov ecx, 0
+  int 0x80
+
+  ; print "2 seconds passed!"
+  mov eax, 4
+  mov ebx, 1
+  mov ecx, emessage
+  mov edx, emessagel
+  int 0x80
+  
+  ; Sleep for 2 seconds and 0 nanoseconds
+  mov dword [tv_sec], 2
+  mov dword [tv_usec], 0
+  mov eax, 162
+  mov ebx, timeval
+  mov ecx, 0
+  int 0x80
+  
+  ; print "another 2 seconds passed!"
+  mov eax, 4
+  mov ebx, 1
+  mov ecx, zmessage
+  mov edx, zmessagel
+  int 0x80
+
+  ; exit
+  mov eax, 1
+  mov ebx, 0
+  int 0x80
+
+section .data
 msg        db      'Seconds since Jan 01 1970: ', 0h     ; a message string
 
-SECTION .text
-global  _start
+timeval:
+    tv_sec  dd 0
+    tv_usec dd 0
 
-_start:
-    ; Print the message
-    mov     eax, msg        ; move our message string into eax for printing
-    call    sprint          ; call our string printing function
+bmessage  db "Sleep", 10, 0
+bmessagel equ $ - bmessage
 
-    ; Get seconds since Jan 01 1970
-    mov     eax, 13         ; invoke SYS_TIME (kernel opcode 13)
-    int     80h             ; call the kernel
-
-    ; Print the seconds
-    call    iprintLF        ; call our integer printing function with linefeed
-
-    ; Sleep for 2 seconds
-    mov     eax, 2          ; 2 seconds
-    call    sleep           ; call sleep function
-
-    ; Print the message again
-    mov     eax, msg        ; move our message string into eax for printing
-    call    sprint          ; call our string printing function
-
-    ; Get seconds since Jan 01 1970 again
-    mov     eax, 13         ; invoke SYS_TIME (kernel opcode 13)
-    int     80h             ; call the kernel
-
-    ; Print the seconds again
-    call    iprintLF        ; call our integer printing function with linefeed
-
-    ; Quit the program
-    call    quit            ; call our quit function
+emessage  db "2 seconds passed!", 10, 0
+emessagel equ $ - emessage
+  
+zmessage  db "Another 2 seconds passed!", 10, 0
+zmessagel equ $ - zmessage

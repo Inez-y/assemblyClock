@@ -174,3 +174,4 @@ _start:
  
     call    iprintLF        ; call our integer printing function with linefeed
     call    quit            ; call our quit function
+; Seconds since Jan 01 1970: 1712030186
