@@ -1,5 +1,3 @@
-; Combine the two assembly files
-
 ;------------------------------------------
 ; atoi function
 atoi:
@@ -128,13 +126,56 @@ sprint:
     pop     edx
     ret
  
- 
-;------------------------------------------
-; _start function
-global  _start
- 
+
+
+section .data
+    msg1 db 'Press any key to print Linux time and time counter', 0xA, 0xD, 0
+    len1 equ $ - msg1
+    
+    
+    msg        db      'Seconds since Jan 01 1970: ', 0h     ; a message string
+
+timeval:
+    tv_sec  dd 0
+    tv_usec dd 0
+
+bmessage  db "Counting...!", 10, 0
+bmessagel equ $ - bmessage
+
+emessage  db "2 seconds passed!", 10, 0
+emessagel equ $ - emessage
+  
+zmessage  db "Another 2 seconds passed!", 10, 0
+zmessagel equ $ - zmessage
+
+bye_msg db 'Bye', 0xA, 0xD, 0
+    len_bye_msg equ $ - bye_msg
+
+; 
+
+section .bss
+    key_in resb 1
+    linux_time resd 1
+    counter resd 1
+
+section .text
+    global _start
+
 _start:
- 
+    ; Print message
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg1
+    mov edx, len1
+    int 0x80
+
+    ; Wait for user input
+    mov eax, 3        ; read syscall
+    mov ebx, 0        ; standard input
+    mov ecx, key_in   ; buffer to read into
+    mov edx, 1        ; number of bytes to read
+    int 0x80
+
     mov     eax, msg        ; move our message string into eax for printing
     call    sprint          ; call our string printing function
  
@@ -185,18 +226,12 @@ _start:
   mov ebx, 0
   int 0x80
 
-section .data
-msg        db      'Seconds since Jan 01 1970: ', 0h     ; a message string
 
-timeval:
-    tv_sec  dd 0
-    tv_usec dd 0
 
-bmessage  db "Sleep", 10, 0
-bmessagel equ $ - bmessage
 
-emessage  db "2 seconds passed!", 10, 0
-emessagel equ $ - emessage
-  
-zmessage  db "Another 2 seconds passed!", 10, 0
-zmessagel equ $ - zmessage
+    ; Print "Bye" message
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, bye_msg
+    mov edx, len_bye_msg
+    int 0x80
