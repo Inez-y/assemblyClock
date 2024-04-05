@@ -220,18 +220,15 @@ _start:
   mov ecx, zmessage
   mov edx, zmessagel
   int 0x80
-
-  ; exit
-  mov eax, 1
-  mov ebx, 0
-  int 0x80
-
-
-
-
+  
     ; Print "Bye" message
     mov eax, 4
     mov ebx, 1
     mov ecx, bye_msg
     mov edx, len_bye_msg
     int 0x80
+  
+  ; exit
+  mov eax, 1
+  mov ebx, 0
+  int 0x80
