@@ -1,5 +1,6 @@
 ;------------------------------------------
-; atoi function
+; atoi function: Converts a string representing an integer to an integer value
+;------------------------------------------
 atoi:
     push    ebx             ; preserve ebx on the stack to be restored after function runs
     push    ecx             ; preserve ecx on the stack to be restored after function runs
@@ -38,7 +39,8 @@ atoi:
     ret
 
 ;------------------------------------------
-; iprint function
+; iprint function: Prints an integer to stdout
+;------------------------------------------
 iprint:
     push    eax             ; preserve eax on the stack to be restored after function runs
     push    ecx             ; preserve ecx on the stack to be restored after function runs
@@ -72,7 +74,8 @@ printLoop:
  
  
 ;------------------------------------------
-; iprintLF function
+; iprintLF function: Prints an integer to stdout followed by a linefeed
+;------------------------------------------
 iprintLF:
     call    iprint          ; call our integer printing function
  
@@ -87,148 +90,118 @@ iprintLF:
  
  
 ;------------------------------------------
-; slen function
-slen:
-    push    ebx
-    mov     ebx, eax
- 
-nextchar:
-    cmp     byte [eax], 0
-    jz      finished
-    inc     eax
-    jmp     nextchar
- 
-finished:
-    sub     eax, ebx
-    pop     ebx
-    ret
- 
- 
+; slen function: Calculates the length of a null-terminated string
 ;------------------------------------------
-; sprint function
-sprint:
-    push    edx
-    push    ecx
-    push    ebx
-    push    eax
-    call    slen
- 
-    mov     edx, eax
-    pop     eax
- 
-    mov     ecx, eax
-    mov     ebx, 1
-    mov     eax, 4
-    int     80h
- 
-    pop     ebx
-    pop     ecx
-    pop     edx
-    ret
+slen:
+    push    ebx         ; Preserve the value of ebx by pushing it onto the stack
+    mov     ebx, eax    ; Copy the address of the string (passed via eax) into ebx
+
+nextchar:
+    cmp     byte [eax], 0  ; Compare the byte at the address in eax to 0 (null terminator)
+    jz      finished    ; If the byte is 0, indicating the end of the string, jump to 'finished'
+    inc     eax         ; Move to the next character by incrementing the pointer in eax
+    jmp     nextchar    ; Jump back to 'nextchar' to continue checking characters
+
+finished:
+    sub     eax, ebx    ; Calculate the length of the string by subtracting the initial address (ebx) from the final address (eax)
+    pop     ebx         ; Restore the value of ebx by popping it from the stack
+    ret                 ; Return the length of the string in eax
+
  
 
+;------------------------------------------
+; sprint function: Prints a null-terminated string to stdout
+;------------------------------------------
+sprint:
+    push    edx             ; Preserve the value of edx by pushing it onto the stack
+    push    ecx             ; Preserve the value of ecx by pushing it onto the stack
+    push    ebx             ; Preserve the value of ebx by pushing it onto the stack
+    push    eax             ; Preserve the value of eax by pushing it onto the stack
+    call    slen            ; Call the slen function to get the length of the string
+ 
+    mov     edx, eax        ; Move the length of the string (returned by slen) into the edx register
+    pop     eax             ; Restore the original value of eax by popping it from the stack
+    mov     ecx, eax        ; Set ecx to point to the string to print
+    mov     ebx, 1          ; Set ebx to 1, which is the file descriptor for stdout
+    mov     eax, 4          ; Set eax to 4, which is the system call number for sys_write
+    int     80h             ; Call the kernel to write the string to stdout
+ 
+    pop     ebx             ; Restore the preserved value of ebx by popping it from the stack
+    pop     ecx             ; Restore the preserved value of ecx by popping it from the stack
+    pop     edx             ; Restore the preserved value of edx by popping it from the stack
+    ret                     ; Return from the function
+
+ 
+
+;------------------------------------------
+; _start function: Entry point of the program (main)
+;------------------------------------------
+global  _start
+ 
+_start:
+ 
+    mov     eax, msg        ; Move the address of the message string into eax for printing
+    call    sprint          ; Call the sprint function to print the message string
+ 
+    mov     eax, 13         ; Move the system call number for SYS_TIME into eax
+    int     80h             ; Invoke the kernel to execute the SYS_TIME system call, which retrieves the current time
+ 
+    call    iprintLF        ; Call the iprintLF function to print an integer followed by a linefeed
+
+    ; Print "Sleep"
+    mov eax, 4              ; Move the system call number for sys_write into eax
+    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
+    mov ecx, bmessage       ; Move the address of the "Sleep" message into ecx
+    mov edx, bmessagel      ; Move the length of the "Sleep" message into edx
+    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
+  
+    ; Sleep for 2 seconds and 0 nanoseconds
+    mov dword [tv_sec], 2   ; Move the value 2 (seconds) into tv_sec
+    mov dword [tv_usec], 0  ; Move the value 0 (nanoseconds) into tv_usec
+    mov eax, 162            ; Move the system call number for SYS_NANOSLEEP into eax
+    mov ebx, timeval        ; Move the address of timeval structure into ebx
+    mov ecx, 0              ; Move 0 into ecx (unused parameter)
+    int 0x80                ; Invoke the kernel to execute the SYS_NANOSLEEP system call, which sleeps for the specified duration
+  
+    ; Print "2 seconds passed!"
+    mov eax, 4              ; Move the system call number for sys_write into eax
+    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
+    mov ecx, emessage       ; Move the address of the "2 seconds passed!" message into ecx
+    mov edx, emessagel      ; Move the length of the "2 seconds passed!" message into edx
+    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
+  
+    ; Sleep for 2 seconds and 0 nanoseconds
+    mov dword [tv_sec], 2   ; Move the value 2 (seconds) into tv_sec
+    mov dword [tv_usec], 0  ; Move the value 0 (nanoseconds) into tv_usec
+    mov eax, 162            ; Move the system call number for SYS_NANOSLEEP into eax
+    mov ebx, timeval        ; Move the address of timeval structure into ebx
+    mov ecx, 0              ; Move 0 into ecx (unused parameter)
+    int 0x80                ; Invoke the kernel to execute the SYS_NANOSLEEP system call, which sleeps for the specified duration
+  
+    ; Print "another 2 seconds passed!"
+    mov eax, 4              ; Move the system call number for sys_write into eax
+    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
+    mov ecx, zmessage       ; Move the address of the "Another 2 seconds passed!" message into ecx
+    mov edx, zmessagel      ; Move the length of the "Another 2 seconds passed!" message into edx
+    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
+
+    ; Exit the program
+    mov eax, 1              ; Move the system call number for SYS_EXIT into eax
+    mov ebx, 0              ; Move the exit status (0) into ebx
+    int 0x80                ; Invoke the kernel to execute the SYS_EXIT system call, which terminates the program
 
 section .data
-    msg1 db 'Press any key to print Linux time and time counter', 0xA, 0xD, 0
-    len1 equ $ - msg1
-    
-    
-    msg        db      'Seconds since Jan 01 1970: ', 0h     ; a message string
+msg        db      'Seconds since Jan 01 1970: ', 0h     ; Define the message string
 
-timeval:
-    tv_sec  dd 0
-    tv_usec dd 0
+timeval:                    ; Define timeval structure to store time values
+    tv_sec  dd 0            ; Define tv_sec field (seconds)
+    tv_usec dd 0            ; Define tv_usec field (microseconds)
 
-bmessage  db "Counting...!", 10, 0
-bmessagel equ $ - bmessage
+bmessage  db "Sleep", 10, 0      ; Define the "Sleep" message string with a newline and null terminator
+bmessagel equ $ - bmessage       ; Calculate the length of the "Sleep" message
 
-emessage  db "2 seconds passed!", 10, 0
-emessagel equ $ - emessage
+emessage  db "2 seconds passed!", 10, 0    ; Define the "2 seconds passed!" message string with a newline and null terminator
+emessagel equ $ - emessage                 ; Calculate the length of the "2 seconds passed!" message
   
-zmessage  db "Another 2 seconds passed!", 10, 0
-zmessagel equ $ - zmessage
-
-bye_msg db 'Bye', 0xA, 0xD, 0
-    len_bye_msg equ $ - bye_msg
-
-; 
-
-section .bss
-    key_in resb 1
-    linux_time resd 1
-    counter resd 1
-
-section .text
-    global _start
-
-_start:
-    ; Print message
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, msg1
-    mov edx, len1
-    int 0x80
-
-    ; Wait for user input
-    mov eax, 3        ; read syscall
-    mov ebx, 0        ; standard input
-    mov ecx, key_in   ; buffer to read into
-    mov edx, 1        ; number of bytes to read
-    int 0x80
-
-    mov     eax, msg        ; move our message string into eax for printing
-    call    sprint          ; call our string printing function
- 
-    mov     eax, 13         ; invoke SYS_TIME (kernel opcode 13)
-    int     80h             ; call the kernel
- 
-    call    iprintLF        ; call our integer printing function with linefeed
-
-  ; print "Sleep"
-  mov eax, 4
-  mov ebx, 1
-  mov ecx, bmessage
-  mov edx, bmessagel
-  int 0x80
-
-  ; Sleep for 2 seconds and 0 nanoseconds
-  mov dword [tv_sec], 2
-  mov dword [tv_usec], 0
-  mov eax, 162
-  mov ebx, timeval
-  mov ecx, 0
-  int 0x80
-
-  ; print "2 seconds passed!"
-  mov eax, 4
-  mov ebx, 1
-  mov ecx, emessage
-  mov edx, emessagel
-  int 0x80
-  
-  ; Sleep for 2 seconds and 0 nanoseconds
-  mov dword [tv_sec], 2
-  mov dword [tv_usec], 0
-  mov eax, 162
-  mov ebx, timeval
-  mov ecx, 0
-  int 0x80
-  
-  ; print "another 2 seconds passed!"
-  mov eax, 4
-  mov ebx, 1
-  mov ecx, zmessage
-  mov edx, zmessagel
-  int 0x80
-  
-    ; Print "Bye" message
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, bye_msg
-    mov edx, len_bye_msg
-    int 0x80
-  
-  ; exit
-  mov eax, 1
-  mov ebx, 0
-  int 0x80
+zmessage  db "Another 2 seconds passed!", 10, 0    ; Define the "Another 2 seconds passed!" message string with a newline and null terminator
+zmessagel equ $ - zmessage                         ; Calculate the length of the "Another 2 seconds passed!" message
