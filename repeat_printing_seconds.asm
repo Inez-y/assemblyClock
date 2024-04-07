@@ -131,8 +131,6 @@ sprint:
     pop     edx             ; Restore the preserved value of edx by popping it from the stack
     ret                     ; Return from the function
 
- 
-
 ;------------------------------------------
 ; _start function: Entry point of the program (main)
 ;------------------------------------------
@@ -140,68 +138,30 @@ section .data
 msg        db      'Seconds since Jan 01 1970: ', 0h     ; Define the message string
 
 global  _start              ; Define '_start' as the entry point of this program
- 
+
 _start:
- 
+    ; Infinite loop
+    jmp     loop_start
+
+loop_start:
+    ; 1. Get and print the current time
     mov     eax, msg        ; Move the address of the message string into eax for printing
     call    sprint          ; Call the sprint function to print the message string
- 
+
     mov     eax, 13         ; Move the system call number for SYS_TIME into eax
     int     80h             ; Invoke the kernel to execute the SYS_TIME system call, which retrieves the current time
- 
-    call    iprintLF        ; Call the iprintLF function to print an integer followed by a linefeed
+    call    iprintLF        ; Call the iprintLF function to print the time (in seconds since Jan 01 1970) and a linefeed
 
-    ; Print "Sleep"
-    mov eax, 4              ; Move the system call number for sys_write into eax
-    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
-    mov ecx, bmessage       ; Move the address of the "Sleep" message into ecx
-    mov edx, bmessagel      ; Move the length of the "Sleep" message into edx
-    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
-  
-    ; Sleep for 2 seconds and 0 nanoseconds
+    ; 2. Sleep for 2 seconds
     mov dword [tv_sec], 2   ; Move the value 2 (seconds) into tv_sec
     mov dword [tv_usec], 0  ; Move the value 0 (nanoseconds) into tv_usec
     mov eax, 162            ; Move the system call number for SYS_NANOSLEEP into eax
     mov ebx, timeval        ; Move the address of timeval structure into ebx
     mov ecx, 0              ; Move 0 into ecx (unused parameter)
     int 0x80                ; Invoke the kernel to execute the SYS_NANOSLEEP system call, which sleeps for the specified duration
-  
-    ; Print "2 seconds passed!"
-    mov eax, 4              ; Move the system call number for sys_write into eax
-    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
-    mov ecx, emessage       ; Move the address of the "2 seconds passed!" message into ecx
-    mov edx, emessagel      ; Move the length of the "2 seconds passed!" message into edx
-    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
-  
-    ; Sleep for 2 seconds and 0 nanoseconds
-    mov dword [tv_sec], 2   ; Move the value 2 (seconds) into tv_sec
-    mov dword [tv_usec], 0  ; Move the value 0 (nanoseconds) into tv_usec
-    mov eax, 162            ; Move the system call number for SYS_NANOSLEEP into eax
-    mov ebx, timeval        ; Move the address of timeval structure into ebx
-    mov ecx, 0              ; Move 0 into ecx (unused parameter)
-    int 0x80                ; Invoke the kernel to execute the SYS_NANOSLEEP system call, which sleeps for the specified duration
-  
-    ; Print "another 2 seconds passed!"
-    mov eax, 4              ; Move the system call number for sys_write into eax
-    mov ebx, 1              ; Set ebx to 1, which is the file descriptor for stdout
-    mov ecx, zmessage       ; Move the address of the "Another 2 seconds passed!" message into ecx
-    mov edx, zmessagel      ; Move the length of the "Another 2 seconds passed!" message into edx
-    int 0x80                ; Invoke the kernel to execute the sys_write system call, which prints the message
 
-    ; Exit the program
-    mov eax, 1              ; Move the system call number for SYS_EXIT into eax
-    mov ebx, 0              ; Move the exit status (0) into ebx
-    int 0x80                ; Invoke the kernel to execute the SYS_EXIT system call, which terminates the program
-
+    jmp     loop_start      ; Jump back to the start of the loop
+    
 timeval:                    ; Define timeval structure to store time values
     tv_sec  dd 0            ; Define tv_sec field (seconds)
     tv_usec dd 0            ; Define tv_usec field (microseconds)
-
-bmessage  db "Sleep", 10, 0      ; Define the "Sleep" message string with a newline and null terminator
-bmessagel equ $ - bmessage       ; Calculate the length of the "Sleep" message
-
-emessage  db "2 seconds passed!", 10, 0    ; Define the "2 seconds passed!" message string with a newline and null terminator
-emessagel equ $ - emessage                 ; Calculate the length of the "2 seconds passed!" message
-  
-zmessage  db "Another 2 seconds passed!", 10, 0    ; Define the "Another 2 seconds passed!" message string with a newline and null terminator
-zmessagel equ $ - zmessage                         ; Calculate the length of the "Another 2 seconds passed!" message
