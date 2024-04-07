@@ -120,7 +120,7 @@ _start:
     mov     eax, 3                                      ; System call number for SYS_READ
     int     80h                                         ; Invoke the system call to read user input
     
-    mov     eax, msg2                            ; Load the address of the input format message
+    mov     eax, msg2                                   ; Load the address of the input format message
     call    sprint                                      ; Call sprint to print the format message
     
     movzx   eax, byte [sinput]                          ; Move the first byte of input into eax, zero-extended
