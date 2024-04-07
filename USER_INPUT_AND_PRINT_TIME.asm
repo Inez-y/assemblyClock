@@ -96,7 +96,7 @@ sprint:
 ;------------------------------------------
 section .data
 msg1        db      'Please enter a digit (0-9): ', 0h  ; Prompt message for user input
-inputFormat db      'Your input is: ', 0h               ; Format for echoing user input
+msg2        db      'Your input is: ', 0h               ; Format for echoing user input
 msg3        db      'Seconds since Jan 01 1970: ', 0h   ; Message prefix for current Unix time
 
 section .bss
@@ -120,7 +120,7 @@ _start:
     mov     eax, 3                                      ; System call number for SYS_READ
     int     80h                                         ; Invoke the system call to read user input
     
-    mov     eax, inputFormat                            ; Load the address of the input format message
+    mov     eax, msg2                            ; Load the address of the input format message
     call    sprint                                      ; Call sprint to print the format message
     
     movzx   eax, byte [sinput]                          ; Move the first byte of input into eax, zero-extended
