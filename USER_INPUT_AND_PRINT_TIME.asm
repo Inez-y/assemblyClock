@@ -53,19 +53,19 @@ iprintLF:
 ; slen function: Calculates the length of a null-terminated string
 ;------------------------------------------
 slen:
-    push    ebx         ; Preserve the value of ebx by pushing it onto the stack
-    mov     ebx, eax    ; Copy the address of the string (passed via eax) into ebx
+    push    ebx             ; Preserve the value of ebx by pushing it onto the stack
+    mov     ebx, eax        ; Copy the address of the string (passed via eax) into ebx
 
 nextchar:
-    cmp     byte [eax], 0  ; Compare the byte at the address in eax to 0 (null terminator)
-    jz      finished    ; If the byte is 0, indicating the end of the string, jump to 'finished'
-    inc     eax         ; Move to the next character by incrementing the pointer in eax
-    jmp     nextchar    ; Jump back to 'nextchar' to continue checking characters
+    cmp     byte [eax], 0   ; Compare the byte at the address in eax to 0 (null terminator)
+    jz      finished        ; If the byte is 0, indicating the end of the string, jump to 'finished'
+    inc     eax             ; Move to the next character by incrementing the pointer in eax
+    jmp     nextchar        ; Jump back to 'nextchar' to continue checking characters
 
 finished:
-    sub     eax, ebx    ; Calculate the length of the string by subtracting the initial address (ebx) from the final address (eax)
-    pop     ebx         ; Restore the value of ebx by popping it from the stack
-    ret                 ; Return the length of the string in eax
+    sub     eax, ebx        ; Calculate the length of the string by subtracting the initial address (ebx) from the final address (eax)
+    pop     ebx             ; Restore the value of ebx by popping it from the stack
+    ret                     ; Return the length of the string in eax
 
  
 
@@ -80,8 +80,7 @@ sprint:
     call    slen            ; Call the slen function to get the length of the string
  
     mov     edx, eax        ; Move the length of the string (returned by slen) into the edx register
-    pop     eax             ; Restore the original value of eax by popping it from the stack
-    mov     ecx, eax        ; Set ecx to point to the string to print
+    pop     ecx             ; Restore the original value of eax by popping it from the stack
     mov     ebx, 1          ; Set ebx to 1, which is the file descriptor for stdout
     mov     eax, 4          ; Set eax to 4, which is the system call number for sys_write
     int     80h             ; Call the kernel to write the string to stdout
@@ -96,8 +95,7 @@ sprint:
 ;------------------------------------------
 section .data
 msg1        db      'Please enter a digit (0-9): ', 0h  ; Prompt message for user input
-msg2        db      'Your input is: ', 0h               ; Format for echoing user input
-msg3        db      'Seconds since Jan 01 1970: ', 0h   ; Message prefix for current Unix time
+msg2        db      'Seconds since Jan 01 1970: ', 0h   ; Message prefix for current Unix time
 
 section .bss
 sinput:     resb    2                                   ; Reserve space for 1 digit of input and newline
@@ -111,7 +109,7 @@ global  _start                                           ; Define '_start' as th
 _start:
 
     ; Get user input
-    mov     eax, msg1                                   ; Load the address of the input prompt message into eax
+    mov     eax, msg1                                   ; Load the address of the input prompt message into eax　
     call    sprint                                      ; Call sprint to print the prompt message
     
     mov     edx, 2                                      ; Set the number of bytes to read (1 digit + newline)
@@ -120,21 +118,16 @@ _start:
     mov     eax, 3                                      ; System call number for SYS_READ
     int     80h                                         ; Invoke the system call to read user input
     
-    mov     eax, msg2                                   ; Load the address of the input format message
-    call    sprint                                      ; Call sprint to print the format message
-    
     movzx   eax, byte [sinput]                          ; Move the first byte of input into eax, zero-extended
     sub     al, '0'                                     ; Convert ASCII digit to its numeric value
     mov     [sleepTime], al                             ; Store the numeric value into sleepTime
-    push    eax                                         ; Push the numeric value onto the stack for printing
-    call    iprintLF                                    ; Call iprintLF to print the input digit and a newline
 
     ; Infinite loop
     jmp     loop_start                                  ; Jump to the start of the loop
 
 loop_start:
     ; 1. Get and print the current time
-    mov     eax, msg3                                   ; Load the address of the current time message prefix
+    mov     eax, msg2                                   ; Load the address of the current time message prefix
     call    sprint                                      ; Call sprint to print the message prefix
 
     mov     eax, 13                                     ; System call number for SYS_TIME
